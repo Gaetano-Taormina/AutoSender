@@ -1,0 +1,14 @@
+# Cartelle di sistema e Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Profili del Browser (CONTIENE LE CHIAVI DI ACCESSO A WHATSAPP: MAI PUBBLICARE!)
+Bot_Profile/
+WhatsAppBot_Profile/
+
+# Database locale con i tuoi messaggi
+tasks.json
+
+# File eseguibili grandi
+msedgedriver.exe
