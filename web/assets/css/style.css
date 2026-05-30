@@ -1,0 +1,156 @@
+:root {
+    --wa-green: #25D366;
+    --wa-dark: #128C7E;
+    --wa-bg: #E4EFE9;
+    --bg-color: #F0F2F5;
+    --card-bg: #FFFFFF;
+    --text-main: #111B21;
+    --text-sec: #667781;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: var(--text-main);
+}
+
+.app-container {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 450px;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    font-size: 24px;
+    color: var(--wa-dark);
+    margin: 10px 0 5px;
+}
+
+.header p {
+    color: var(--text-sec);
+    font-size: 14px;
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #D1D7DB;
+    border-radius: 8px;
+    font-size: 15px;
+    background-color: #F8F9FA;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--wa-green);
+    background-color: #FFF;
+    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+}
+
+textarea {
+    resize: vertical;
+}
+
+.btn-primary {
+    width: 100%;
+    background-color: var(--wa-green);
+    color: white;
+    border: none;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    background-color: var(--wa-dark);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+    background-color: #A5A5A5;
+    cursor: not-allowed;
+}
+
+.status-area {
+    margin-top: 25px;
+    text-align: center;
+    padding: 15px;
+    background-color: var(--wa-bg);
+    border-radius: 8px;
+    border: 1px solid rgba(37, 211, 102, 0.2);
+}
+
+.hidden {
+    display: none;
+}
+
+.timer {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--wa-dark);
+    font-variant-numeric: tabular-nums;
+}
+
+.status-message {
+    margin: 10px 0 0;
+    font-size: 14px;
+    color: var(--wa-dark);
+    font-weight: 500;
+}
+
+.datetime-inputs {
+    display: flex;
+    gap: 10px;
+}
+
+.datetime-inputs input {
+    flex: 1;
+}
+
+.help-text {
+    color: var(--text-sec);
+    display: block;
+    margin-top: 5px;
+}

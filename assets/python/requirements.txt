@@ -1,0 +1,4 @@
+eel==0.16.0
+selenium==4.18.1
+webdriver-manager==4.0.1
+setuptools<70
