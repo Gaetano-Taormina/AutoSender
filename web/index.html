@@ -11,36 +11,38 @@
 <body>
     <div class="app-container">
         <div class="header">
-            <h1>WhatsApp Auto Sender</h1>
-            <p>Pianifica l'invio dei tuoi messaggi</p>
+            <h1 data-i18n="app_title">WhatsApp Auto Sender</h1>
+            <p data-i18n="app_subtitle">Schedule your messages</p>
         </div>
         
         <div class="form-group">
-            <label for="contactName">Destinatario (Nome esatto in rubrica)</label>
-            <input type="text" id="contactName" placeholder="Es. Mario Rossi" required>
+            <label for="contactName" data-i18n="label_contact">Recipient (Exact name in contacts)</label>
+            <input type="text" id="contactName" data-i18n-placeholder="placeholder_contact" placeholder="E.g. John Doe" required>
         </div>
 
         <div class="form-group">
-            <label for="messageText">Messaggio</label>
-            <textarea id="messageText" rows="4" placeholder="Scrivi qui il tuo messaggio..." required></textarea>
+            <label for="messageText" data-i18n="label_message">Message</label>
+            <textarea id="messageText" rows="4" data-i18n-placeholder="placeholder_message" placeholder="Write your message here..." required></textarea>
         </div>
 
         <div class="form-group time-group">
-            <label>Quando inviare il messaggio?</label>
+            <label data-i18n="label_when">When to send the message?</label>
             <div class="datetime-inputs">
-                <input type="date" id="delayDate" title="Se omesso, usa la data di oggi">
-                <input type="time" id="delayTime" step="1" required title="Formato Ora:Minuti:Secondi">
+                <input type="date" id="delayDate" data-i18n-title="title_date" title="If omitted, uses today's date">
+                <input type="time" id="delayTime" step="1" required data-i18n-title="title_time" title="Format Hour:Minutes:Seconds">
             </div>
-            <small class="help-text">La data è opzionale (di default è oggi).</small>
+            <small class="help-text" data-i18n="help_date">The date is optional (defaults to today).</small>
         </div>
 
-        <button id="startBtn" class="btn-primary">Avvia Automazione</button>
+        <button id="startBtn" class="btn-primary" data-i18n="btn_start">Start Automation</button>
 
         <div id="statusArea" class="status-area hidden">
             <div class="timer" id="timerDisplay">00:00</div>
-            <p id="statusMessage" class="status-message">In attesa...</p>
+            <p id="statusMessage" class="status-message" data-i18n="status_waiting">Waiting...</p>
         </div>
     </div>
+    <script src="assets/js/i18n.js"></script>
+    <script src="assets/js/cryptoCookie.js"></script>
     <script src="assets/js/script.js"></script>
 </body>
 </html>
