@@ -29,6 +29,7 @@ A complete desktop application built with MVC architecture using Python (Eel) an
 ## 🚀 Installation and Setup
 
 1. **Clone the repository**:
+
    ```bash
    git clone <your_github_link>
    cd whatsapp_bot
@@ -36,6 +37,7 @@ A complete desktop application built with MVC architecture using Python (Eel) an
 
 2. **Install dependencies**:
    Make sure you have Python installed. Run:
+
    ```bash
    pip install -r assets/python/requirements.txt
    ```
@@ -44,6 +46,7 @@ A complete desktop application built with MVC architecture using Python (Eel) an
    The bot will try to use the native Selenium Manager. If you get a network error, download the Microsoft Edge driver (same version as your browser) from [Microsoft Edge WebDriver](https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/) and extract the `msedgedriver.exe` file directly into this folder.
 
 4. **Start the bot**:
+
    ```bash
    python main.py
    ```
@@ -61,7 +64,7 @@ The automation is based on the HTML structure (DOM) of WhatsApp Web. Since Meta 
 ---
 ---
 
-# WhatsApp Web Automator Bot (Local Privacy First)
+## 🇮🇹 Versione Italiana: WhatsApp Web Automator Bot
 
 Un'applicazione desktop completa, costruita con architettura MVC usando Python (Eel) e Selenium. Consente di schedulare l'invio di messaggi WhatsApp Web in modo totalmente automatizzato, sicuro e locale sul tuo PC.
 
@@ -92,6 +95,7 @@ Un'applicazione desktop completa, costruita con architettura MVC usando Python (
 ## 🚀 Installazione e Avvio
 
 1. **Clona la repository**:
+
    ```bash
    git clone <il_tuo_link_github>
    cd whatsapp_bot
@@ -99,6 +103,7 @@ Un'applicazione desktop completa, costruita con architettura MVC usando Python (
 
 2. **Installa le dipendenze**:
    Assicurati di avere Python installato. Esegui:
+
    ```bash
    pip install -r assets/python/requirements.txt
    ```
@@ -107,6 +112,7 @@ Un'applicazione desktop completa, costruita con architettura MVC usando Python (
    Il bot proverà a usare il Selenium Manager nativo. Se ottieni un errore di rete, scarica il driver per Microsoft Edge (stessa versione del tuo browser) da [Microsoft Edge WebDriver](https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/) ed estrai il file `msedgedriver.exe` direttamente in questa cartella.
 
 4. **Avvia il bot**:
+
    ```bash
    python main.py
    ```
