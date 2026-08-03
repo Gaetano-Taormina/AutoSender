@@ -1,0 +1,63 @@
+body {
+  background: linear-gradient(135deg, #2b2e33 0%, #1a1c20 100%);
+  background-attachment: fixed;
+  color: #ffffff;
+  color-scheme: dark;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Sidebar styling for glassmorphism */
+.sidebar {
+  min-height: 100vh;
+  background: rgba(40, 43, 48, 0.6);
+  backdrop-filter: blur(15px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar .nav-link {
+  color: #adb5bd;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
+}
+
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+  background-color: rgba(37, 211, 102, 0.2);
+  color: #25D366;
+}
+
+.card-glass {
+  background: rgba(40, 40, 40, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.form-control {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.form-control:focus {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #25D366;
+  color: white;
+  box-shadow: 0 0 0 0.25rem rgba(37, 211, 102, 0.25);
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+}
+
+.btn-whatsapp {
+  background-color: #25D366;
+  color: white;
+  font-weight: bold;
+}
+.btn-whatsapp:hover {
+  background-color: #1da851;
+  color: white;
+}
