@@ -1,14 +1,38 @@
-# Cartelle di sistema e Python
+# Build directories
+dist/
+build/
+*.spec
+
+# Python dependencies and environments
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
+env/
+venv/
+.env
+.venv/
+env.bak/
+venv.bak/
 
-# Profili del Browser (CONTIENE LE CHIAVI DI ACCESSO A WHATSAPP: MAI PUBBLICARE!)
-Bot_Profile/
-WhatsAppBot_Profile/
+# JS dependencies
+node_modules/
 
-# Database locale con i tuoi messaggi
+# Logs and user data
+logs.txt
 tasks.json
+contacts.json
+debug_output.txt
+AutoSender_Profile/
+*.log
 
-# File eseguibili grandi
-msedgedriver.exe
+# Scripts di test
+test.py
+*test*.py
+
+# IDE files
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
