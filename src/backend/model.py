@@ -45,13 +45,11 @@ def init_driver(status_callback=None):
             # Fallback to Selenium Manager if the file is missing (may give error in background)
             driver = webdriver.Edge(options=options)
         except Exception as e:
-            if status_callback: status_callback("Base driver error. Downloading Edge driver (first time)...")
-            # Configure SSL certificates for PyInstaller environment before downloading
-            os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
-            os.environ['SSL_CERT_FILE'] = certifi.where()
-            os.environ['WDM_SSL_VERIFY'] = '1'
-            
+            if status_callback: status_callback(f"Base driver error: {str(e)}\nDownloading Edge driver (first time)...")
             try:
+                # Disabilita temporaneamente la verifica SSL se certifi manca nel file .exe
+                os.environ['WDM_SSL_VERIFY'] = '0'
+                
                 service = EdgeService(EdgeChromiumDriverManager().install())
                 driver = webdriver.Edge(service=service, options=options)
             except Exception as e2:
