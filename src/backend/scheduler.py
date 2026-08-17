@@ -104,7 +104,7 @@ def trash_missed_message(contact, message):
         
     send_to_recycle_bin(file_path)
 
-def run_scheduler():
+def run_scheduler(parent_pid=None):
     """Infinite loop checking pending tasks in background."""
     # Prevent 2 schedulers from running simultaneously using a Windows Mutex
     mutex_name = "AutoSender_Scheduler_Mutex"
@@ -117,6 +117,21 @@ def run_scheduler():
     
     while True:
         try:
+            # Process monitor check: if parent_pid is provided, ensure it's still alive
+            if parent_pid:
+                # SYNCHRONIZE = 0x00100000
+                process = kernel32.OpenProcess(0x00100000, False, parent_pid)
+                if process == 0:
+                    write_log("Process monitor: Parent process died. Shutting down scheduler.")
+                    if scheduler_driver:
+                        try:
+                            scheduler_driver.quit()
+                        except:
+                            pass
+                    sys.exit(0)
+                else:
+                    kernel32.CloseHandle(process)
+
             tasks = get_pending_tasks()
             
             # If there are no messages to send at all
@@ -128,7 +143,10 @@ def run_scheduler():
                         pass
                     scheduler_driver = None
                     write_log("No messages scheduled soon. Browser closed to save resources.")
-                sys.exit(0)
+                
+                # Riposa per soli 2 secondi se la coda è vuota, per garantire reattività istantanea
+                time.sleep(2)
+                continue
                 
             now = time.time()
             due_tasks = []
@@ -146,16 +164,22 @@ def run_scheduler():
                     future_tasks.append(task)
                     
             if due_tasks:
-                for task in due_tasks:
+                for idx, task in enumerate(due_tasks):
                     contact = task["contact"]
                     message = task["message"]
                     task_id = task["id"]
                     
+                    # Controllo real-time: il task è stato cancellato dall'utente durante l'attesa?
+                    current_pending = get_pending_tasks()
+                    if not any(t["id"] == task_id for t in current_pending):
+                        write_log(f"Task for {contact} was cancelled by user. Skipping.")
+                        continue
+                        
                     write_log(f"Executing scheduled send to {contact}...")
                     
                     try:
-                        # Pass the driver (null the first time, or reused)
-                        result = send_whatsapp_message(contact, message, status_callback=write_log, existing_driver=scheduler_driver)
+                        # Pass the driver (null the first time, or reused) and keep it open!
+                        result = send_whatsapp_message(contact, message, status_callback=write_log, existing_driver=scheduler_driver, keep_open=True)
                         
                         # Update the reference to the driver to use it in next iterations
                         scheduler_driver = result.get("driver")
@@ -204,7 +228,22 @@ def run_scheduler():
         except Exception as e:
             pass # Ignore network/IO errors to avoid service crash
             
-        time.sleep(10) # More frequent check (10 seconds) since we have close sessions
+        time.sleep(1) # Check super-frequente (1 secondo) per garantire spaccata precisione al secondo
+
+import signal
+
+def signal_handler(signum, frame):
+    write_log(f"Process monitor: Received termination signal ({signum}). Shutting down scheduler.")
+    sys.exit(0)
 
 if __name__ == "__main__":
-    run_scheduler()
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    if hasattr(signal, 'SIGBREAK'):
+        signal.signal(signal.SIGBREAK, signal_handler)
+
+    parent_pid = None
+    if len(sys.argv) > 1 and sys.argv[1].isdigit():
+        parent_pid = int(sys.argv[1])
+        
+    run_scheduler(parent_pid)

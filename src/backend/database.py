@@ -5,13 +5,11 @@ import sys
 from datetime import datetime
 
 def get_profile_dir():
-    """Returns the user profile path in AppData."""
-    if sys.platform == "win32":
-        base_dir = os.environ.get('LOCALAPPDATA', os.path.expanduser('~'))
-    else:
-        base_dir = os.path.expanduser('~')
-        
-    profile_dir = os.path.join(base_dir, "AutoSender_Profile")
+    """Returns the user profile path (data folder inside the project root)."""
+    # Naviga su di tre livelli: src/backend/database.py -> src/backend -> src -> whatsapp_bot
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    profile_dir = os.path.join(base_dir, "data")
+    
     if not os.path.exists(profile_dir):
         os.makedirs(profile_dir)
     return profile_dir
@@ -100,17 +98,7 @@ def mark_task_done(task_id, success=True, error=None):
 
 def get_db_path():
     """Returns the database path, ensuring the folder exists."""
-    # Use AppData/Local (which doesn't sync to OneDrive by default)
-    if sys.platform == "win32":
-        base_dir = os.environ.get('LOCALAPPDATA', os.path.expanduser('~'))
-    else:
-        base_dir = os.path.expanduser('~')
-        
-    profile_dir = os.path.join(base_dir, "AutoSender_Profile")
-    if not os.path.exists(profile_dir):
-        os.makedirs(profile_dir)
-        
-    return os.path.join(profile_dir, "tasks.db")
+    return os.path.join(get_profile_dir(), "tasks.db")
 
 def write_log(message):
     """Writes a log visible in the UI."""

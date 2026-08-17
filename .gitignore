@@ -18,6 +18,7 @@ venv.bak/
 node_modules/
 
 # Logs and user data
+data/
 logs.txt
 tasks.json
 contacts.json
