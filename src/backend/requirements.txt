@@ -1,4 +1,4 @@
 eel==0.16.0
 selenium==4.48.0
 webdriver-manager>=4.1.2
-setuptools<70
+setuptools<85
