@@ -11,7 +11,7 @@ export default function LiveLogs() {
         try {
           const fetchedLogs = await window.eel.get_logs()();
           setLogs(fetchedLogs || []);
-        } catch (err) {
+        } catch {
           // Ignore polling errors
         }
       }

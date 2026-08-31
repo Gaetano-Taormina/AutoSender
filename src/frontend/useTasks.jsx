@@ -15,9 +15,27 @@ export function useTasks() {
   };
 
   useEffect(() => {
-    fetchTasks();
-    const interval = setInterval(fetchTasks, 15000); // Poll every 15s for updates
-    return () => clearInterval(interval);
+    let active = true;
+
+    const load = async () => {
+      if (window.eel) {
+        try {
+          const data = await window.eel.get_pending_tasks_from_db()();
+          if (active) {
+            setTasks(data || []);
+          }
+        } catch (err) {
+          console.error("Error fetching tasks via Eel:", err);
+        }
+      }
+    };
+
+    void load();
+    const interval = setInterval(load, 15000); // Poll every 15s for updates
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const addTask = async (contact, message, timestamp) => {
