@@ -21,7 +21,7 @@ AutoSender is a modern desktop application that allows users to schedule and aut
 - **Smart Autocomplete:** The system automatically remembers previously used numbers or names and suggests them instantly via a native dropdown.
 - **Pending Tasks Management:** Easily view, monitor, or delete scheduled messages before they are sent.
 - **Background Autostart:** Seamlessly runs in the background. It automatically starts on Windows boot (via a hidden VBS script) to ensure your scheduled messages are sent even if you haven't opened the UI.
-- **Portable Batch Launcher:** Uses a self-configuring batch file (`Avvia_AutoSender.bat`) that automatically provisions local virtual environments (Node and Python venv) without compiling heavy `.exe` files. This completely eliminates false-positive antivirus flags and prevents orphaned processes.
+- **Node.js Process Orchestrator:** Uses a supervisor script (`start.js`) that automatically boots local virtual environments without compiling heavy `.exe` files. This completely eliminates false-positive antivirus flags and prevents orphaned processes.
 - **Ghost Mode (Minimized Execution):** The internal browser operates completely in the background. It uses `webdriver-manager` to automatically handle Edge drivers.
 - **Modern UI:** A beautiful, responsive interface built with React, featuring a sleek Dark Mode, Glassmorphism effects, and Live Logs to monitor background activity.
 - **100% Local Privacy:** All data (contacts and pending messages) are stored securely in local JSON files inside the `data/` project folder (USB-ready).
@@ -44,10 +44,7 @@ The project features a hybrid Desktop architecture, combining modern web technol
  ┃ ┣ 📂 frontend           # React UI (Vite)
  ┃ ┗ 📂 backend            # Python Engine (Selenium, Scheduler, Eel)
  ┣ 📂 data                 # 100% Portable user database (JSON)
- ┣ 📂 release              # Output directory for clean portable launcher
  ┣ 📜 start.js             # Node.js Process Orchestrator
- ┣ 📜 Avvia_AutoSender.bat # Main automated entry point for users
- ┣ 📜 build_release.ps1    # PowerShell script to generate release folders
  ┗ 📜 package.json
 ```
 
@@ -60,10 +57,14 @@ The project features a hybrid Desktop architecture, combining modern web technol
 
 ### 🚀 Compilation and Execution
 
-The application is designed to be fully portable for Windows users without needing `.exe` compilers like PyInstaller.
+The application is designed to run seamlessly and cross-platform without needing `.exe` compilers like PyInstaller.
 
 To run the application:
-Simply double-click `Avvia_AutoSender.bat` inside the `release/` folder. It acts as an elegant lightweight shortcut that launches the app instantly from the root without duplicating environments.
+
+```bash
+pnpm install
+pnpm start
+```
 
 ---
 
@@ -77,7 +78,7 @@ AutoSender è un'applicazione desktop moderna che permette agli utenti di progra
 - **Completamento Automatico Intelligente:** Il sistema ricorda i numeri utilizzati in precedenza e li suggerisce istantaneamente tramite un menu a tendina.
 - **Gestione Code:** Visualizza, monitora o elimina facilmente i messaggi in sospeso.
 - **Avvio Automatico in Background:** Il motore di invio si avvia automaticamente all'accensione di Windows (tramite script VBS invisibile).
-- **Lanciatore Batch Portatile (No-EXE):** Sfrutta un file batch autoconfigurante (`Avvia_AutoSender.bat`) che gestisce autonomamente gli ambienti virtuali isolati (`.venv`). Questo elimina completamente i falsi positivi degli antivirus tipici dei file `.exe` e impedisce la creazione di "processi orfani".
+- **Orchestratore di Processi Node.js:** Sfrutta uno script supervisore (`start.js`) che gestisce autonomamente gli ambienti virtuali isolati (`.venv`). Questo elimina completamente i falsi positivi degli antivirus tipici dei file `.exe` e impedisce la creazione di "processi orfani".
 - **Modalità Fantasma:** Il browser interno opera in background per non interrompere il tuo lavoro.
 - **Interfaccia Moderna:** Un'interfaccia stupenda creata con React, dotata di Dark Mode, effetti Glassmorphism e Live Logs.
 - **Privacy Locale al 100%:** Tutti i dati sono salvati in modo sicuro in file JSON locali nella cartella `data/` (USB-ready). Nessun dato viene mai trasmesso a server esterni.
@@ -100,10 +101,7 @@ Il progetto è basato su un'architettura ibrida supervisionata da Node.js.
  ┃ ┣ 📂 frontend           # Interfaccia React (Vite)
  ┃ ┗ 📂 backend            # Motore Python (Selenium, Scheduler, Eel)
  ┣ 📂 data                 # Database utente 100% portatile su chiavetta
- ┣ 📂 release              # Cartella contenente il lanciatore pulito
  ┣ 📜 start.js             # Orchestratore Node.js
- ┣ 📜 Avvia_AutoSender.bat # Lanciatore automatico principale per l'utente
- ┣ 📜 build_release.ps1    # Script PowerShell per creare pacchetti di release
  ┗ 📜 package.json
 ```
 
@@ -116,7 +114,11 @@ Il progetto è basato su un'architettura ibrida supervisionata da Node.js.
 
 ### 🚀 Compilazione ed Esecuzione
 
-L'applicazione è progettata per essere totalmente portatile su Windows senza l'uso di instabili compilatori come PyInstaller.
+L'applicazione è progettata per essere totalmente cross-platform senza l'uso di instabili compilatori come PyInstaller.
 
 Per avviare l'applicazione:
-Fai doppio clic su `Avvia_AutoSender.bat` all'interno della cartella `release/AutoSender_v1.1`. Agirà come un telecomando leggero ed elegante per lanciare il bot senza dover duplicare file pesanti.
+
+```bash
+pnpm install
+pnpm start
+```
