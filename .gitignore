@@ -28,9 +28,11 @@ Bot_Profile/
 *_Profile/
 *.log
 
-# Scripts di test
-test.py
-*test*.py
+# Test and coverage artifacts
+.coverage
+.coverage.*
+.pytest_cache/
+tests/coverage/
 
 # IDE files
 .vscode/
