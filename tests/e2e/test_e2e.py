@@ -2,6 +2,7 @@ import os
 import sys
 import tempfile
 import time
+from unittest.mock import MagicMock, patch
 import pytest
 
 # Add backend directory to sys.path
@@ -47,7 +48,7 @@ class TestEndToEndLifecycle:
 
         monkeypatch.setattr(scheduler, "send_whatsapp_message", mock_send_message)
 
-        # 1. Schedule a task via main Eel API
+        # 1. Schedule a task in the past (due immediately)
         res1 = main.schedule_task("Alice Johnson", "E2E Automated Notification", time.time() - 5)
         assert res1["success"] is True
 
@@ -86,3 +87,41 @@ class TestEndToEndLifecycle:
         main.delete_task_from_db(remaining_pending[0]["id"])
         final_pending = main.get_pending_tasks_from_db()
         assert len(final_pending) == 0
+
+    def test_run_scheduler_execution_loop(self, e2e_environment, monkeypatch):
+        """Test the run_scheduler execution loop with expired, due, and future tasks."""
+        mock_driver = MagicMock()
+        monkeypatch.setattr(scheduler, "send_whatsapp_message", lambda *args, **kwargs: {
+            "success": True, "error": None, "driver": mock_driver
+        })
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "GetLastError", lambda: 0)
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "CreateMutexW", lambda *args: 1)
+
+        # 1. Add expired task (> 300s past), due task, and far future task (> 180s)
+        now = time.time()
+        database.add_task("Expired Contact", "Old message", now - 400)
+        database.add_task("Due Contact", "Due message", now - 10)
+        database.add_task("Future Contact", "Later message", now + 500)
+
+        loop_count = 0
+
+        def mock_sleep(seconds):
+            nonlocal loop_count
+            loop_count += 1
+            if loop_count >= 3:
+                raise KeyboardInterrupt("Stop loop")
+
+        monkeypatch.setattr(scheduler.time, "sleep", mock_sleep)
+
+        # Run scheduler loop and catch interrupt
+        try:
+            scheduler.run_scheduler(parent_pid=None)
+        except (KeyboardInterrupt, SystemExit):
+            pass
+
+        # Check that expired task was processed (removed from pending)
+        pending = database.get_pending_tasks()
+        contacts_pending = [t["contact"] for t in pending]
+        assert "Expired Contact" not in contacts_pending
+        assert "Due Contact" not in contacts_pending
+        assert "Future Contact" in contacts_pending

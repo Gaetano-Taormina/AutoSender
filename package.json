@@ -8,8 +8,8 @@
     "build": "vite build",
     "start": "pnpm run build && node start.js",
     "lint": "oxlint",
-    "test": "vitest run --coverage",
-    "test:all": "vitest run --coverage && pytest tests/",
+    "test": "vitest run --coverage && node tests/coverage-summary.js",
+    "test:all": "vitest run --coverage && pytest tests/ && node tests/coverage-summary.js",
     "preview": "vite preview"
   },
   "dependencies": {
