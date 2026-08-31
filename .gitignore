@@ -24,6 +24,8 @@ tasks.json
 contacts.json
 debug_output.txt
 AutoSender_Profile/
+Bot_Profile/
+*_Profile/
 *.log
 
 # Scripts di test
