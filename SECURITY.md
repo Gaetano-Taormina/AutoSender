@@ -16,6 +16,7 @@ If you discover a security vulnerability within AutoSender, please report it res
 3. Alternatively, contact the maintainer directly via GitHub Security Advisories.
 
 Please include:
+
 - A clear description of the vulnerability and its potential impact.
 - Step-by-step instructions or proof of concept to reproduce the issue.
 - Any suggested fixes or mitigations.

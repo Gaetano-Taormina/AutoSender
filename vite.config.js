@@ -7,10 +7,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    isolate: false,
     include: ['tests/**/*.{test,spec}.{js,jsx}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
+      reporter: ['html', 'json-summary', 'json'],
       reportsDirectory: 'tests/coverage/js'
     }
   },

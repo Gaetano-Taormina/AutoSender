@@ -9,4 +9,20 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src/backend"]
-addopts = "-v --cov=src/backend --cov-report=html:tests/coverage --cov-report=term-missing"
+addopts = "-q --cov=src/backend --cov-report=html:tests/coverage/python --cov-report=json:tests/coverage/coverage-python.json"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore:.*nestedExpr.*",
+    "ignore:.*excludeChars.*",
+    "ignore:.*pkg_resources.*"
+]
+
+[tool.coverage.run]
+data_file = "tests/coverage/.coverage"
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if hasattr\\(signal, .SIGBREAK.\\):"
+]

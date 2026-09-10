@@ -2,7 +2,7 @@ import os
 import sys
 import tempfile
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import pytest
 
 # Add backend directory to sys.path
@@ -91,6 +91,8 @@ class TestEndToEndLifecycle:
     def test_run_scheduler_execution_loop(self, e2e_environment, monkeypatch):
         """Test the run_scheduler execution loop with expired, due, and future tasks."""
         mock_driver = MagicMock()
+        mock_driver.quit.side_effect = Exception("Driver quit error")
+
         monkeypatch.setattr(scheduler, "send_whatsapp_message", lambda *args, **kwargs: {
             "success": True, "error": None, "driver": mock_driver
         })
@@ -125,3 +127,209 @@ class TestEndToEndLifecycle:
         assert "Expired Contact" not in contacts_pending
         assert "Due Contact" not in contacts_pending
         assert "Future Contact" in contacts_pending
+        assert mock_driver.quit.called
+
+    def test_run_scheduler_mutex_already_exists(self, monkeypatch):
+        """Test scheduler exiting if already running."""
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "GetLastError", lambda: 183)
+        with pytest.raises(SystemExit) as exc:
+            scheduler.run_scheduler()
+        assert exc.value.code == 0
+
+    def test_run_scheduler_parent_pid_monitoring(self, monkeypatch, e2e_environment):
+        """Test parent process monitor shutting down when parent dies with active driver."""
+        mock_driver = MagicMock()
+        mock_driver.quit.side_effect = Exception("Quit fail handled")
+
+        mock_kernel32 = MagicMock()
+        mock_kernel32.GetLastError.return_value = 0
+        # 1st loop iteration: parent alive (100). 2nd loop iteration: parent dead (0)
+        mock_kernel32.OpenProcess.side_effect = [100, 0]
+
+        now = time.time()
+        database.add_task("Due Contact", "Msg", now - 10)
+
+        monkeypatch.setattr(scheduler.ctypes.windll, "kernel32", mock_kernel32)
+        monkeypatch.setattr(scheduler, "send_whatsapp_message", lambda *args, **kwargs: {
+            "success": True, "error": None, "driver": mock_driver
+        })
+        monkeypatch.setattr(scheduler.time, "sleep", lambda s: None)
+
+        with pytest.raises(SystemExit) as exc:
+            scheduler.run_scheduler(parent_pid=99999)
+        assert exc.value.code == 0
+        assert mock_driver.quit.called
+
+    def test_run_scheduler_empty_queue_quits_driver(self, monkeypatch, e2e_environment):
+        """Test empty tasks queue closes open driver."""
+        mock_driver = MagicMock()
+        mock_driver.quit.side_effect = Exception("Empty queue quit exception handled")
+
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "GetLastError", lambda: 0)
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "CreateMutexW", lambda *args: 1)
+
+        # 1st iteration calls get_pending_tasks twice (top of loop and inside due loop)
+        now = time.time()
+        database.add_task("Due Contact", "Msg", now - 10)
+
+        call_count = 0
+        original_get_pending = database.get_pending_tasks
+        def mock_get_pending():
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                return original_get_pending()
+            return []
+
+        monkeypatch.setattr(scheduler, "get_pending_tasks", mock_get_pending)
+        monkeypatch.setattr(scheduler, "send_whatsapp_message", lambda *args, **kwargs: {
+            "success": True, "error": None, "driver": mock_driver
+        })
+
+        loop_count = 0
+        def mock_sleep(seconds):
+            nonlocal loop_count
+            loop_count += 1
+            if loop_count >= 3:
+                raise KeyboardInterrupt("Stop loop")
+
+        monkeypatch.setattr(scheduler.time, "sleep", mock_sleep)
+
+        try:
+            scheduler.run_scheduler()
+        except (KeyboardInterrupt, SystemExit):
+            pass
+
+        assert mock_driver.quit.called
+
+    def test_run_scheduler_real_time_cancellation(self, monkeypatch, e2e_environment):
+        """Test real-time user cancellation while task is due."""
+        now = time.time()
+        task_id = database.add_task("Cancel Contact", "Cancel message", now - 10)
+
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "GetLastError", lambda: 0)
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "CreateMutexW", lambda *args: 1)
+
+        # Intercept get_pending_tasks: 1st call returns task, 2nd call inside due loop returns empty (cancelled)
+        calls = 0
+        def mock_get_pending():
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                return [{"id": task_id, "contact": "Cancel Contact", "message": "Msg", "timestamp": now - 10}]
+            return []
+
+        monkeypatch.setattr(scheduler, "get_pending_tasks", mock_get_pending)
+
+        loop_count = 0
+        def mock_sleep(seconds):
+            nonlocal loop_count
+            loop_count += 1
+            if loop_count >= 1:
+                raise KeyboardInterrupt("Stop loop")
+
+        monkeypatch.setattr(scheduler.time, "sleep", mock_sleep)
+
+        try:
+            scheduler.run_scheduler()
+        except (KeyboardInterrupt, SystemExit):
+            pass
+
+        logs = main.get_logs()
+        assert any("was cancelled by user. Skipping." in line for line in logs)
+
+    def test_run_scheduler_send_failure_and_driver_cleanup(self, e2e_environment, monkeypatch):
+        """Test scheduler handling send failures and quitting driver with exception."""
+        now = time.time()
+        database.add_task("Fail Contact", "Error message", now - 10)
+
+        mock_driver = MagicMock()
+        mock_driver.quit.side_effect = Exception("Failure quit error handled")
+
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "GetLastError", lambda: 0)
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "CreateMutexW", lambda *args: 1)
+
+        monkeypatch.setattr(scheduler, "send_whatsapp_message", lambda *args, **kwargs: {
+            "success": False, "error": "WhatsApp Web not responding", "driver": mock_driver
+        })
+
+        loop_count = 0
+        def mock_sleep(seconds):
+            nonlocal loop_count
+            loop_count += 1
+            if loop_count >= 1:
+                raise KeyboardInterrupt("Stop loop")
+
+        monkeypatch.setattr(scheduler.time, "sleep", mock_sleep)
+
+        try:
+            scheduler.run_scheduler()
+        except (KeyboardInterrupt, SystemExit):
+            pass
+
+        assert mock_driver.quit.called
+
+    def test_run_scheduler_send_exception_and_driver_cleanup(self, e2e_environment, monkeypatch):
+        """Test scheduler handling unexpected exceptions during send and quitting driver with exception."""
+        now = time.time()
+        database.add_task("Exception Contact", "Boom message", now - 10)
+
+        mock_driver = MagicMock()
+        mock_driver.quit.side_effect = Exception("Send exception quit error handled")
+
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "GetLastError", lambda: 0)
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "CreateMutexW", lambda *args: 1)
+
+        # 1st call sends message, leaves driver open; 2nd call raises Exception with existing driver
+        send_count = 0
+        def mixed_send(*args, **kwargs):
+            nonlocal send_count
+            send_count += 1
+            if send_count == 1:
+                return {"success": True, "error": None, "driver": mock_driver}
+            raise Exception("Driver crashed unexpectedly")
+
+        database.add_task("Due 1", "Msg", now - 15)
+        monkeypatch.setattr(scheduler, "send_whatsapp_message", mixed_send)
+
+        loop_count = 0
+        def mock_sleep(seconds):
+            nonlocal loop_count
+            loop_count += 1
+            if loop_count >= 1:
+                raise KeyboardInterrupt("Stop loop")
+
+        monkeypatch.setattr(scheduler.time, "sleep", mock_sleep)
+
+        try:
+            scheduler.run_scheduler()
+        except (KeyboardInterrupt, SystemExit):
+            pass
+
+        all_tasks = database.load_tasks()
+        failed_tasks = [t for t in all_tasks if t.get("status") == "failed"]
+        assert len(failed_tasks) >= 1
+        assert mock_driver.quit.called
+
+    def test_run_scheduler_loop_generic_exception(self, monkeypatch):
+        """Test scheduler outer try-except ignoring unexpected network/IO exceptions."""
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "GetLastError", lambda: 0)
+        monkeypatch.setattr(scheduler.ctypes.windll.kernel32, "CreateMutexW", lambda *args: 1)
+        monkeypatch.setattr(scheduler.time, "sleep", lambda s: None)
+
+        call_count = 0
+        def failing_get_pending():
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise IOError("Transient disk error")
+            raise KeyboardInterrupt("Stop loop")
+
+        monkeypatch.setattr(scheduler, "get_pending_tasks", failing_get_pending)
+
+        try:
+            scheduler.run_scheduler()
+        except KeyboardInterrupt:
+            pass
+
+        assert call_count >= 2

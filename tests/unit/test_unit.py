@@ -10,13 +10,12 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src/backend")))
 
 import database
-import model
 import scheduler
 import startup
 
 
 class TestUnitSanitizationAndFormatting:
-    """Level 1: Pure Unit Tests for helpers, sanitization, formatting, and signals."""
+    """Level 1: Pure Unit Tests for helpers, sanitization, formatting, database edge-cases, and signals."""
 
     def test_safe_contact_sanitization(self):
         """Test sanitization of special characters in contact names."""
@@ -58,7 +57,6 @@ class TestUnitSanitizationAndFormatting:
 
         assert os.path.exists(tmp_path)
         try:
-            # SHFileOperation can move to recycle bin
             result = scheduler.send_to_recycle_bin(tmp_path)
             assert isinstance(result, bool)
         finally:
@@ -75,12 +73,17 @@ class TestUnitSanitizationAndFormatting:
         assert past_10min < now
         assert (now - past_10min) >= 600
 
-    def test_database_paths_and_profile_dir(self, monkeypatch):
+    def test_database_paths_and_profile_dir_creation(self, monkeypatch):
         """Test profile directory creation and fallback paths."""
         with tempfile.TemporaryDirectory() as temp_dir:
-            monkeypatch.setattr(database, "get_profile_dir", lambda: temp_dir)
-            db_path = database.get_db_path()
-            assert temp_dir in db_path
+            test_profile = os.path.join(temp_dir, "new_profile_dir")
+            assert not os.path.exists(test_profile)
+
+            # Test directory auto-creation
+            with patch("os.path.dirname") as mock_dir:
+                mock_dir.return_value = temp_dir
+                profile = database.get_profile_dir()
+                assert os.path.exists(profile)
 
     def test_database_corrupt_files_handling(self, monkeypatch):
         """Test database resilience when JSON files are corrupted or empty."""
@@ -100,6 +103,11 @@ class TestUnitSanitizationAndFormatting:
             assert database.load_tasks() == []
             assert database.load_contacts() == []
 
+    def test_database_write_log_exception(self, monkeypatch):
+        """Test write_log silently handles filesystem exceptions."""
+        with patch("builtins.open", side_effect=IOError("Permission denied")):
+            database.write_log("This should not raise")
+
     def test_startup_vbs_generation_and_mutex(self, monkeypatch):
         """Test startup VBScript generation and execution branches."""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -107,13 +115,44 @@ class TestUnitSanitizationAndFormatting:
             fake_startup = os.path.join(temp_dir, "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
             os.makedirs(fake_startup, exist_ok=True)
 
-            with patch("subprocess.Popen") as mock_popen:
+            mock_kernel32 = MagicMock()
+            mock_kernel32.OpenMutexW.return_value = 0  # No mutex existing
+
+            with patch("ctypes.windll") as mock_windll, patch("subprocess.Popen") as mock_popen:
+                mock_windll.kernel32 = mock_kernel32
                 startup.add_to_startup_and_run()
                 vbs_file = os.path.join(fake_startup, "AutoSender_Scheduler.vbs")
                 assert os.path.exists(vbs_file)
                 with open(vbs_file, "r", encoding="utf-8") as f:
                     content = f.read()
                 assert "WScript.Shell" in content
+                assert mock_popen.called
+
+    def test_startup_non_windows_platform(self, monkeypatch):
+        """Test non-windows early return."""
+        monkeypatch.setattr(sys, "platform", "linux")
+        startup.add_to_startup_and_run()
+
+    def test_startup_already_running_mutex(self, monkeypatch):
+        """Test already running mutex handling."""
+        mock_kernel32 = MagicMock()
+        mock_kernel32.OpenMutexW.return_value = 12345  # Simulates existing mutex handle
+
+        with patch("ctypes.windll") as mock_windll:
+            mock_windll.kernel32 = mock_kernel32
+            with tempfile.TemporaryDirectory() as temp_dir:
+                monkeypatch.setenv("APPDATA", temp_dir)
+                fake_startup = os.path.join(temp_dir, "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
+                os.makedirs(fake_startup, exist_ok=True)
+                startup.add_to_startup_and_run()
+                mock_kernel32.CloseHandle.assert_called_with(12345)
+
+    def test_startup_exception_handling(self, monkeypatch):
+        """Test graceful exception logging in startup."""
+        monkeypatch.delenv("APPDATA", raising=False)
+        with patch("builtins.print") as mock_print:
+            startup.add_to_startup_and_run()
+            mock_print.assert_called()
 
     def test_scheduler_signal_handler(self):
         """Test signal_handler function."""

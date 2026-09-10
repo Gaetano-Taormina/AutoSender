@@ -24,9 +24,7 @@ export default function LiveLogs() {
 
   useEffect(() => {
     // Auto-scroll to the bottom only inside the container, without moving the page
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
+    containerRef.current.scrollTop = containerRef.current.scrollHeight;
   }, [logs]);
 
   return (

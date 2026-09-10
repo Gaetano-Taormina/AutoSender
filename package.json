@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "start": "pnpm run build && node start.js",
-    "lint": "oxlint",
-    "test": "vitest run --coverage && node tests/coverage-summary.js",
-    "test:all": "vitest run --coverage && pytest tests/ && node tests/coverage-summary.js",
+    "lint:js": "oxlint",
+    "lint:py": "python -m ruff check src/backend/ tests/",
+    "lint": "pnpm run lint:js && pnpm run lint:py",
+    "test": "vitest run --coverage && node tests/coverage-highlights.js",
+    "test:all": "vitest run --coverage && pytest tests/ && node tests/coverage-highlights.js",
     "preview": "vite preview"
   },
   "dependencies": {
