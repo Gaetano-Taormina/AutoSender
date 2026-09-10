@@ -110,6 +110,7 @@ class TestUnitSanitizationAndFormatting:
 
     def test_startup_vbs_generation_and_mutex(self, monkeypatch):
         """Test startup VBScript generation and execution branches."""
+        monkeypatch.setattr(sys, "platform", "win32")
         with tempfile.TemporaryDirectory() as temp_dir:
             monkeypatch.setenv("APPDATA", temp_dir)
             fake_startup = os.path.join(temp_dir, "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
@@ -157,6 +158,7 @@ class TestUnitSanitizationAndFormatting:
 
     def test_startup_remove_from_startup(self, monkeypatch):
         """Test remove_from_startup function."""
+        monkeypatch.setattr(sys, "platform", "win32")
         with tempfile.TemporaryDirectory() as temp_dir:
             monkeypatch.setenv("APPDATA", temp_dir)
             fake_startup = os.path.join(temp_dir, "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
@@ -210,6 +212,7 @@ class TestUnitSanitizationAndFormatting:
 
     def test_startup_already_running_mutex(self, monkeypatch):
         """Test already running mutex handling."""
+        monkeypatch.setattr(sys, "platform", "win32")
         mock_kernel32 = MagicMock()
         mock_kernel32.OpenMutexW.return_value = 12345  # Simulates existing mutex handle
 
@@ -224,6 +227,7 @@ class TestUnitSanitizationAndFormatting:
 
     def test_startup_exception_handling(self, monkeypatch):
         """Test graceful exception logging in startup."""
+        monkeypatch.setattr(sys, "platform", "win32")
         with patch("startup.get_startup_vbs_path", return_value="C:\\fake\\path.vbs"), \
              patch("startup.get_python_executable", side_effect=Exception("Simulated error")), \
              patch("builtins.print") as mock_print:
