@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
 import App from '../../src/frontend/App';
 
 describe('App Component', () => {
@@ -13,13 +13,19 @@ describe('App Component', () => {
     };
   });
 
+  afterEach(() => {
+    cleanup();
+    delete window.eel;
+    vi.restoreAllMocks();
+  });
+
   it('renders App layout, header, footer, and navigation routes', async () => {
     let renderResult;
     await act(async () => {
       renderResult = render(<App />);
     });
 
-    const { container } = renderResult;
+    const { container, unmount } = renderResult;
 
     expect(screen.getAllByText('AutoSender').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Privacy & Legal:/i)).toBeTruthy();
@@ -40,5 +46,7 @@ describe('App Component', () => {
     await act(async () => {
       fireEvent.click(overlay);
     });
+    unmount();
   });
 });
+

@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from database import get_pending_tasks, mark_task_done, write_log
 from model import send_whatsapp_message
+from startup import remove_from_startup
 
 
 def send_to_recycle_bin(path):
@@ -102,6 +103,8 @@ def run_scheduler(parent_pid=None):
                     write_log(
                         "No messages scheduled soon. Browser closed to save resources."
                     )
+
+                remove_from_startup()
 
                 # Rest for 2 seconds if queue is empty for fast responsiveness
                 time.sleep(2)

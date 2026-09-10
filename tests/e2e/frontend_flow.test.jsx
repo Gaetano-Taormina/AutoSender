@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
 import Compose from '../../src/frontend/components/Compose.jsx';
 import Pending from '../../src/frontend/components/Pending.jsx';
 
@@ -27,7 +27,9 @@ describe('Level 3: Frontend End-to-End User Flow Tests', () => {
   });
 
   afterEach(() => {
+    cleanup();
     delete window.eel;
+    vi.restoreAllMocks();
   });
 
   it('completes the full compose form flow with validation and scheduling', async () => {
@@ -37,8 +39,10 @@ describe('Level 3: Frontend End-to-End User Flow Tests', () => {
     });
 
     // 1. Render Compose component
+    let unmountCompose;
     await act(async () => {
-      render(<Compose onTaskCreated={() => {}} addTask={mockAddTask} />);
+      const res = render(<Compose onTaskCreated={() => {}} addTask={mockAddTask} />);
+      unmountCompose = res.unmount;
       await new Promise((r) => setTimeout(r, 50));
     });
 
@@ -58,6 +62,7 @@ describe('Level 3: Frontend End-to-End User Flow Tests', () => {
     });
 
     expect(mockAddTask).toHaveBeenCalled();
+    unmountCompose();
 
     // 2. Render Pending component and check updated state
     let unmountFn;
@@ -76,8 +81,10 @@ describe('Level 3: Frontend End-to-End User Flow Tests', () => {
   it('handles repeat interval configuration and validation in Compose', async () => {
     const mockAddTask = vi.fn(async () => true);
 
+    let unmount;
     await act(async () => {
-      render(<Compose onTaskCreated={() => {}} addTask={mockAddTask} />);
+      const res = render(<Compose onTaskCreated={() => {}} addTask={mockAddTask} />);
+      unmount = res.unmount;
     });
 
     const repeatInput = screen.getByLabelText('Repeat (times)');
@@ -87,5 +94,7 @@ describe('Level 3: Frontend End-to-End User Flow Tests', () => {
     const intervalInput = screen.getByLabelText('Interval');
     expect(intervalInput).toBeTruthy();
     fireEvent.change(intervalInput, { target: { value: '5' } });
+    unmount();
   });
 });
+

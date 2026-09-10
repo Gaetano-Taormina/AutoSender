@@ -126,12 +126,87 @@ class TestUnitSanitizationAndFormatting:
                 with open(vbs_file, "r", encoding="utf-8") as f:
                     content = f.read()
                 assert "WScript.Shell" in content
+                assert "On Error Resume Next" in content
+                assert "FileExists" in content
                 assert mock_popen.called
+
+    def test_startup_get_path_and_python_executable(self, monkeypatch):
+        """Test get_startup_vbs_path and get_python_executable branches."""
+        # Non-win32 get_startup_vbs_path
+        monkeypatch.setattr(sys, "platform", "linux")
+        assert startup.get_startup_vbs_path() is None
+
+        # Win32 with APPDATA
+        monkeypatch.setattr(sys, "platform", "win32")
+        monkeypatch.setenv("APPDATA", "C:\\Users\\Fake\\AppData\\Roaming")
+        vbs_path = startup.get_startup_vbs_path()
+        assert "AutoSender_Scheduler.vbs" in vbs_path
+
+        # Win32 without APPDATA
+        monkeypatch.delenv("APPDATA", raising=False)
+        assert startup.get_startup_vbs_path() is None
+
+        # get_python_executable with python.exe and pythonw.exe existing
+        monkeypatch.setattr(sys, "executable", "C:\\Python\\python.exe")
+        with patch("os.path.exists", return_value=True):
+            assert startup.get_python_executable() == "C:\\Python\\pythonw.exe"
+
+        # get_python_executable when pythonw.exe does not exist
+        with patch("os.path.exists", return_value=False):
+            assert startup.get_python_executable() == "C:\\Python\\python.exe"
+
+    def test_startup_remove_from_startup(self, monkeypatch):
+        """Test remove_from_startup function."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            monkeypatch.setenv("APPDATA", temp_dir)
+            fake_startup = os.path.join(temp_dir, "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
+            os.makedirs(fake_startup, exist_ok=True)
+            vbs_file = os.path.join(fake_startup, "AutoSender_Scheduler.vbs")
+            with open(vbs_file, "w", encoding="utf-8") as f:
+                f.write("test")
+
+            assert os.path.exists(vbs_file)
+            assert startup.remove_from_startup() is True
+            assert not os.path.exists(vbs_file)
+
+            # Removing when file does not exist
+            assert startup.remove_from_startup() is False
+
+            # Exception handling
+            with patch("startup.get_startup_vbs_path", side_effect=Exception("Disk error")), patch("builtins.print") as mock_print:
+                assert startup.remove_from_startup() is False
+                mock_print.assert_called()
+
+    def test_sync_startup_with_pending(self, monkeypatch):
+        """Test sync_startup_with_pending with and without tasks."""
+        with patch("startup.add_to_startup_and_run") as mock_add, \
+             patch("startup.remove_from_startup") as mock_remove:
+            with patch("database.get_pending_tasks", return_value=[{"id": "1"}]):
+                startup.sync_startup_with_pending()
+                assert mock_add.called
+                assert not mock_remove.called
+
+            mock_add.reset_mock()
+            with patch("database.get_pending_tasks", return_value=[]):
+                startup.sync_startup_with_pending()
+                assert not mock_add.called
+                assert mock_remove.called
+
+            # Exception handling
+            with patch("database.get_pending_tasks", side_effect=Exception("DB error")), patch("builtins.print") as mock_print:
+                startup.sync_startup_with_pending()
+                mock_print.assert_called()
 
     def test_startup_non_windows_platform(self, monkeypatch):
         """Test non-windows early return."""
         monkeypatch.setattr(sys, "platform", "linux")
         startup.add_to_startup_and_run()
+
+    def test_startup_vbs_path_none(self, monkeypatch):
+        """Test add_to_startup_and_run early return when vbs_path is None."""
+        monkeypatch.setattr(sys, "platform", "win32")
+        with patch("startup.get_startup_vbs_path", return_value=None):
+            startup.add_to_startup_and_run()
 
     def test_startup_already_running_mutex(self, monkeypatch):
         """Test already running mutex handling."""
@@ -149,8 +224,9 @@ class TestUnitSanitizationAndFormatting:
 
     def test_startup_exception_handling(self, monkeypatch):
         """Test graceful exception logging in startup."""
-        monkeypatch.delenv("APPDATA", raising=False)
-        with patch("builtins.print") as mock_print:
+        with patch("startup.get_startup_vbs_path", return_value="C:\\fake\\path.vbs"), \
+             patch("startup.get_python_executable", side_effect=Exception("Simulated error")), \
+             patch("builtins.print") as mock_print:
             startup.add_to_startup_and_run()
             mock_print.assert_called()
 
@@ -159,3 +235,4 @@ class TestUnitSanitizationAndFormatting:
         with pytest.raises(SystemExit) as exc:
             scheduler.signal_handler(signal.SIGINT, None)
         assert exc.value.code == 0
+

@@ -1,9 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Dashboard from '../../src/frontend/components/Dashboard.jsx';
 
 describe('Level 1: Dashboard Component Unit Tests', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('renders Dashboard with pending task counts and handles pluralization/null', () => {
     // 1. Multiple tasks
     const mockTasks = [
@@ -11,7 +15,7 @@ describe('Level 1: Dashboard Component Unit Tests', () => {
       { id: '2', contact: 'Bob', message: 'Hello', timestamp: 1700000000 }
     ];
 
-    const { rerender } = render(
+    const { rerender, unmount } = render(
       <MemoryRouter>
         <Dashboard tasks={mockTasks} />
       </MemoryRouter>
@@ -44,5 +48,7 @@ describe('Level 1: Dashboard Component Unit Tests', () => {
       </MemoryRouter>
     );
     expect(screen.getByText('You have 0 messages waiting to be sent.')).toBeTruthy();
+    unmount();
   });
 });
+

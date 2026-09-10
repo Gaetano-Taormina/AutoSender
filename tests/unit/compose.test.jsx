@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import Compose from '../../src/frontend/components/Compose.jsx';
 
 describe('Level 1: Compose Component Unit Tests', () => {
@@ -8,6 +8,7 @@ describe('Level 1: Compose Component Unit Tests', () => {
   });
 
   afterEach(() => {
+    cleanup();
     delete window.eel;
     vi.restoreAllMocks();
   });

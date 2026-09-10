@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, cleanup } from '@testing-library/react';
 import LiveLogs from '../../src/frontend/components/LiveLogs.jsx';
 
 describe('Level 1: LiveLogs Component Unit Tests', () => {
   afterEach(() => {
+    cleanup();
     delete window.eel;
     vi.restoreAllMocks();
   });
@@ -27,22 +28,27 @@ describe('Level 1: LiveLogs Component Unit Tests', () => {
     window.eel = {
       get_logs: vi.fn(() => () => Promise.resolve(null))
     };
+    let unmount;
     await act(async () => {
-      render(<LiveLogs />);
+      const res = render(<LiveLogs />);
+      unmount = res.unmount;
     });
     expect(screen.getByText('Waiting for operations...')).toBeTruthy();
+    unmount();
   });
 
   it('handles missing window.eel and errors gracefully', async () => {
     delete window.eel;
-    const { unmount } = render(<LiveLogs />);
+    const { unmount: unmount1 } = render(<LiveLogs />);
     expect(screen.getByText('Waiting for operations...')).toBeTruthy();
-    unmount();
+    unmount1();
 
     window.eel = {
       get_logs: vi.fn(() => () => Promise.reject(new Error('Log fetch failed')))
     };
-    render(<LiveLogs />);
+    const { unmount: unmount2 } = render(<LiveLogs />);
     expect(screen.getByText('Waiting for operations...')).toBeTruthy();
+    unmount2();
   });
 });
+
