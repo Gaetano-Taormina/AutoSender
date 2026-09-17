@@ -84,7 +84,7 @@ jobs:
             -x ".git/*" ".github/*" "node_modules/*" ".pytest_cache/*" ".ruff_cache/*" "tests/coverage/*"
 
       - name: Create GitHub LTS Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: steps.tag_version.outputs.new_tag
         with:
           tag_name: ${{ steps.tag_version.outputs.new_tag }}
